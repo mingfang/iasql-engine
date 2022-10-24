@@ -35,7 +35,6 @@ export type EventProps = {
   dataOnly?: boolean;
   params?: string[];
   sql?: string;
-  buttonAlias?: string;
 };
 
 export async function logEvent(
