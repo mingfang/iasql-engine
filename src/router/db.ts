@@ -136,7 +136,7 @@ db.post('/run/:dbAlias', async (req, res) => {
   if (!config.db.sqlViaRest) return res.status(400).end('SQL Querying via REST disabled');
   const { dbAlias } = req.params;
   if (!dbAlias) return res.status(400).json("Required key 'dbAlias' not provided");
-  const { sql, ampDeviceId, byStatement, byUser } = req.body;
+  const { sql, ampDeviceId, byStatement } = req.body;
   const uid = dbMan.getUid(req.user);
   const email = dbMan.getEmail(req.user);
   let dbId;
@@ -144,22 +144,19 @@ db.post('/run/:dbAlias', async (req, res) => {
     const database: IasqlDatabase = await MetadataRepo.getDb(uid, dbAlias);
     dbId = database.pgName;
     const output = await iasql.runSql(dbAlias, uid, sql, byStatement ?? false);
-    // ignore queries done by the dashboard itself
-    if (byUser) {
-      telemetry.logRunSql(
-        {
-          dbAlias,
-          email,
-          dbId,
-        },
-        {
-          output: JSON.stringify(output),
-          sql,
-        },
-        uid,
-        ampDeviceId,
-      );
-    }
+    telemetry.logRunSql(
+      {
+        dbAlias,
+        email,
+        dbId,
+      },
+      {
+        output: JSON.stringify(output),
+        sql,
+      },
+      uid,
+      ampDeviceId,
+    );
     res.json(output);
   } catch (e: any) {
     // do not send to sentry
