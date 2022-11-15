@@ -6,7 +6,7 @@ authors: [yrobla]
 
 # Optimize your S3 endpoints for cost and efficiency
 
-Are you using S3 buckets as part of your cloud deployments ? How are you accessing them?
+Are you using S3 buckets as part of your cloud deployments? How are you accessing them?
 
 When not configured properly, access to the S3 buckets may need internet access. One simple but costly way
 is to rely on <a href="https://docs.aws.amazon.com/en_en/vpc/latest/userguide/vpc-nat-gateway.html" target="_blank">NAT gateways</a>.
@@ -39,7 +39,7 @@ pass through the interface.
 **Performance: latency**
 
 Because of the traffic staying within Amazon’s networks, the physical distance travelled, the number of hops
-and the risk of traversing congested networks are all significantly lower.{' '}
+and the risk of traversing congested networks are all significantly lower.
 
 **Performance: bandwidth**
 
@@ -67,7 +67,7 @@ the desired type in an automated way.
 
 ## Endpoint interfaces
 
-And endpoint interface is an elastic network interface with a private IP address that serves as an entry
+An endpoint interface is an elastic network interface with a private IP address that serves as an entry
 point for traffic destined to a supported AWS service. As they use ENIs, they can benefit of security groups
 to control traffic. Policies can also be added to control access to those endpoints.
 
