@@ -116,7 +116,7 @@ class RepositoryImageMapper extends MapperBase<RepositoryImage> {
       repository.repositoryName,
       repository.registryId,
     );
-    if (images && images.imageDetails && images.imageDetails.length > 0) {
+    if (images && images.imageDetails) {
       for (const image of images.imageDetails) {
         if (image.imageDigest && image.imageTags && image.imageTags.length > 0) {
           const imageId = { imageDigest: image.imageDigest, imageTag: image.imageTags[0] };
