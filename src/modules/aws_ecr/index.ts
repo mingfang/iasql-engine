@@ -79,10 +79,6 @@ class RepositoryImageMapper extends MapperBase<RepositoryImage> {
     if (region) out.privateRepositoryRegion = region;
     return out;
   }
-  getRepositoryImage = crudBuilder2<ECR, 'batchGetImage'>('batchGetImage', (imageIds, repositoryName) => ({
-    imageIds,
-    repositoryName,
-  }));
   listRepositoryImages = crudBuilder2<ECR, 'describeImages'>(
     'describeImages',
     (imageIds, repositoryName, registryId) => ({
@@ -162,7 +158,9 @@ class RepositoryImageMapper extends MapperBase<RepositoryImage> {
             const rawImage = await this.listRepositoryImages(client.ecrClient, [imageId], decoded[3]);
             if (rawImage?.imageDetails && rawImage.imageDetails[0]) {
               const imageDetail = rawImage.imageDetails[0];
-              return await this.repositoryImageMapper(imageDetail, ctx, type, undefined);
+              if (imageDetail.imageDigest && imageDetail.imageTags && imageDetail.imageTags.length > 0) {
+                return await this.repositoryImageMapper(imageDetail, ctx, type, undefined);
+              }
             }
           }
         } else {
@@ -171,7 +169,9 @@ class RepositoryImageMapper extends MapperBase<RepositoryImage> {
           const rawImage = await this.listPublicRepositoryImages(client.ecrPubClient, [imageId], decoded[3]);
           if (rawImage?.imageDetails && rawImage.imageDetails[0]) {
             const imageDetail = rawImage.imageDetails[0];
-            return await this.repositoryImageMapper(imageDetail, ctx, type, undefined);
+            if (imageDetail.imageDigest && imageDetail.imageTags && imageDetail.imageTags.length > 0) {
+              return await this.repositoryImageMapper(imageDetail, ctx, type, undefined);
+            }
           }
           return undefined;
         }
