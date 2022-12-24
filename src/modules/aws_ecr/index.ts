@@ -2,6 +2,7 @@ import {
   ECR,
   Repository as RepositoryAws,
   paginateDescribeRepositories,
+  paginateDescribeImages,
   ImageDetail,
 } from '@aws-sdk/client-ecr';
 import {
@@ -79,14 +80,7 @@ class RepositoryImageMapper extends MapperBase<RepositoryImage> {
     if (region) out.privateRepositoryRegion = region;
     return out;
   }
-  listRepositoryImages = crudBuilder2<ECR, 'describeImages'>(
-    'describeImages',
-    (imageIds, repositoryName, registryId) => ({
-      imageIds,
-      repositoryName,
-      registryId,
-    }),
-  );
+  listRepositoryImages = paginateBuilder<ECR>(paginateDescribeImages, 'imageDetails');
   listPublicRepositoryImages = crudBuilder2<ECRPUBLIC, 'describeImages'>(
     'describeImages',
     (imageIds, repositoryName, registryId) => ({
@@ -112,8 +106,8 @@ class RepositoryImageMapper extends MapperBase<RepositoryImage> {
       repository.repositoryName,
       repository.registryId,
     );
-    if (images && images.imageDetails) {
-      for (const image of images.imageDetails) {
+    if (images) {
+      for (const image of images) {
         if (image.imageDigest && image.imageTags && image.imageTags.length > 0) {
           const imageId = { imageDigest: image.imageDigest, imageTag: image.imageTags[0] };
           await this.deleteRepositoryImage(client, [imageId], repository.repositoryName, image.registryId);
@@ -155,9 +149,9 @@ class RepositoryImageMapper extends MapperBase<RepositoryImage> {
           const idRegion = decoded[4];
           if (enabledRegions.includes(idRegion)) {
             const client = (await ctx.getAwsClient(idRegion)) as AWS;
-            const rawImage = await this.listRepositoryImages(client.ecrClient, [imageId], decoded[3]);
-            if (rawImage?.imageDetails && rawImage.imageDetails[0]) {
-              const imageDetail = rawImage.imageDetails[0];
+            const rawImages = await this.listRepositoryImages(client.ecrClient, [imageId], decoded[3]);
+            if (rawImages && rawImages[0]) {
+              const imageDetail = rawImages[0];
               if (imageDetail.imageDigest && imageDetail.imageTags && imageDetail.imageTags.length > 0) {
                 return await this.repositoryImageMapper(imageDetail, ctx, type, undefined);
               }
@@ -187,14 +181,14 @@ class RepositoryImageMapper extends MapperBase<RepositoryImage> {
             for (const r of repositories.filter(repo => repo?.region === region)) {
               try {
                 // first retrieve the list of images associated to the repo, then retrieve the details
-                const ri = await this.listRepositoryImages(
+                const images = await this.listRepositoryImages(
                   regionClient.ecrClient,
                   undefined,
                   r.repositoryName,
                   r.registryId,
                 );
-                if (ri?.imageDetails) {
-                  for (const imageDetail of ri.imageDetails) {
+                if (images) {
+                  for (const imageDetail of images) {
                     if (
                       imageDetail.imageDigest &&
                       imageDetail.imageTags &&
